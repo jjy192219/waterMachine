@@ -15,10 +15,9 @@ class ofApp : public ofBaseApp{
 		void update();
 		void draw();
         void keyReleased(int key);
+        void intersect();
     
         ofVideoGrabber          mVideoGraber;
-        vector<ofSoundPlayer>   mSounds;
-        vector<ofRectangle>     mRects;
         vector<CELL>            mCells;
     
         int                     mCamWidth;
@@ -28,6 +27,7 @@ class ofApp : public ofBaseApp{
         int                     mPerCellHeight;
         int                     mCellLeftMargin;
         int                     mCellTopMargin;
+        bool                    bLearnBackground;
     
         ofxCvColorImage         mColorImage;
         ofxCvGrayscaleImage     mGrayImage;

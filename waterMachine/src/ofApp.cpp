@@ -2,28 +2,23 @@
 
 //--------------------------------------------------------------
 void ofApp::setup(){
-    mCamWidth = 320;
-    mCamHeight = 240;
+    ofEnableAlphaBlending();
+    mCamWidth = ofGetWindowWidth();
+    mCamHeight = ofGetWindowHeight();
     
-    mPerCellWidth = mCamWidth*0.05;
+    mPerCellWidth = mCamWidth*0.08;
     mPerCellHeight = mCamHeight/5;
     mCellTopMargin = 0;
     mCellLeftMargin = mCamWidth/2;
     
     mVideoGraber.setDeviceID(0);
-    mVideoGraber.setVerbose(true);
     mVideoGraber.initGrabber(mCamWidth, mCamHeight);
     mColorImage.allocate(mCamWidth, mCamHeight);
     mGrayImage.allocate(mCamWidth, mCamHeight);
+    mThreshold = 100;
+    bLearnBackground = true;
     
-    mSounds.clear();
-    for (int i =0; i<=4; i++) {
-        ofSoundPlayer tempSound;
-        string fileName = "tone"+ofToString(i)+".mp3";
-        tempSound.load(fileName);
-        mSounds.push_back(tempSound);
-    }
-    
+    mCells.clear();
     for (int i =0; i <= 4; i++){
         CELL tempCell;
         ofRectangle tempRect;
@@ -33,7 +28,6 @@ void ofApp::setup(){
         tempCell.bTouched = false;
         mCells.push_back(tempCell);
     }
-    
 }
 
 //--------------------------------------------------------------
@@ -41,30 +35,76 @@ void ofApp::update(){
     mVideoGraber.update();
     if (mVideoGraber.isFrameNew()) {
         mColorImage.setFromPixels(mVideoGraber.getPixels());
+        mGrayImage = mColorImage;
+        if (bLearnBackground) {
+            mGrayBg = mGrayImage;
+            bLearnBackground = false;
+        }
+        mGrayDiff.absDiff(mGrayBg, mGrayImage);
+        mGrayDiff.threshold(mThreshold);
+        mContourFinder.findContours(mGrayDiff, 3, mCamWidth*mCamHeight/3, 10, false);
+        intersect();
+    }
+}
+
+void ofApp::intersect(){
+    for (auto i:mCells) {
+        for (auto j:mContourFinder.blobs) {
+            if(j.boundingRect.intersects(i.rect)){
+                i.bTouched = true;
+                if(!i.sound.isPlaying()){
+                    i.sound.play();
+                }
+            }else{
+                i.bTouched = false;
+            }
+        }
     }
 }
 
 //--------------------------------------------------------------
 void ofApp::draw(){
     ofSetBackgroundColor(0, 0, 0);
-//    mVideoGraber.draw(0, 0, mCamWidth,mCamHeight);
-    mColorImage.draw(0, 0);
+    mVideoGraber.draw(0, 0, mCamWidth,mCamHeight);
+    
     for (auto i:mCells) {
-        ofNoFill();
-        ofSetColor(204, 204, 204);
-        ofDrawRectangle(i.rect);
+        if(i.sound.isPlaying()){
+            ofFill();
+            ofSetColor(204, 0, 0, 50);
+            ofDrawRectangle(i.rect);
+        }else{
+            ofNoFill();
+            ofSetColor(255, 255, 255);
+            ofDrawRectangle(i.rect);
+        }
     }
+    
+    for (auto i:mContourFinder.blobs) {
+        i.draw();
+    }
+    
+    ofSetHexColor(0xffffff);
+    stringstream reportStr;
+    reportStr << "bg subtraction and blob detection" << endl
+    << "press ' ' to capture bg" << endl
+    << "threshold " << mThreshold << " (press: +/-)" << endl
+    << "num blobs found " << mContourFinder.nBlobs << ", fps: " << ofGetFrameRate();
+    ofDrawBitmapString(reportStr.str(), 20, 600);
 }
 
 void ofApp::keyReleased(int key){
-
     switch (key){
-        case '0': mSounds[0].play();
-        case '1': mSounds[1].play();
-        case '2': mSounds[2].play();
-        case '3': mSounds[3].play();
-        case '4': mSounds[4].play();
-            
+        case ' ':
+            bLearnBackground = true;
+            break;
+        case '+':
+            mThreshold ++;
+            if (mThreshold > 255) mThreshold = 255;
+            break;
+        case '-':
+            mThreshold --;
+            if (mThreshold < 0) mThreshold  = 0;
+            break;
     }
 }
 
