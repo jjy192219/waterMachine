@@ -2,10 +2,15 @@
 
 //--------------------------------------------------------------
 void ofApp::setup(){
-    mCamWidth = 640;
-    mCamHeight = 480;
+    mCamWidth = 320;
+    mCamHeight = 240;
     
-    mVideoGraber.setDeviceID(1);
+    mPerCellWidth = mCamWidth*0.05;
+    mPerCellHeight = mCamHeight/5;
+    mCellTopMargin = 0;
+    mCellLeftMargin = mCamWidth/2;
+    
+    mVideoGraber.setDeviceID(0);
     mVideoGraber.setVerbose(true);
     mVideoGraber.initGrabber(mCamWidth, mCamHeight);
     mColorImage.allocate(mCamWidth, mCamHeight);
@@ -17,6 +22,16 @@ void ofApp::setup(){
         string fileName = "tone"+ofToString(i)+".mp3";
         tempSound.load(fileName);
         mSounds.push_back(tempSound);
+    }
+    
+    for (int i =0; i <= 4; i++){
+        CELL tempCell;
+        ofRectangle tempRect;
+        tempRect.set(mCellLeftMargin, mPerCellHeight*i , mPerCellWidth,  mPerCellHeight);
+        tempCell.rect = tempRect;
+        tempCell.sound.load( "tone"+ofToString(i)+".mp3");
+        tempCell.bTouched = false;
+        mCells.push_back(tempCell);
     }
     
 }
@@ -34,6 +49,11 @@ void ofApp::draw(){
     ofSetBackgroundColor(0, 0, 0);
 //    mVideoGraber.draw(0, 0, mCamWidth,mCamHeight);
     mColorImage.draw(0, 0);
+    for (auto i:mCells) {
+        ofNoFill();
+        ofSetColor(204, 204, 204);
+        ofDrawRectangle(i.rect);
+    }
 }
 
 void ofApp::keyReleased(int key){
