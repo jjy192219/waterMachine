@@ -20,6 +20,7 @@ class ofApp : public ofBaseApp{
         ofVideoGrabber          mVideoGraber;
         vector<CELL>            mCells;
     
+        int                     mCellTotalNum;
         int                     mCamWidth;
         int                     mCamHeight;
         int                     mThreshold;

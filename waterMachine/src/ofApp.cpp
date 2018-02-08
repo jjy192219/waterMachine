@@ -3,23 +3,23 @@
 //--------------------------------------------------------------
 void ofApp::setup(){
     ofEnableAlphaBlending();
-    mCamWidth = ofGetWindowWidth();
-    mCamHeight = ofGetWindowHeight();
-    
-    mPerCellWidth = mCamWidth*0.08;
-    mPerCellHeight = mCamHeight/5;
+    mCamWidth = 960;
+    mCamHeight = 720;
+    mCellTotalNum = 20;
+    mPerCellWidth = mCamWidth*0.09;
+    mPerCellHeight = mCamHeight/mCellTotalNum;
     mCellTopMargin = 0;
-    mCellLeftMargin = mCamWidth/2;
+    mCellLeftMargin = mCamWidth/2-mPerCellWidth + 20;
     
     mVideoGraber.setDeviceID(0);
     mVideoGraber.initGrabber(mCamWidth, mCamHeight);
     mColorImage.allocate(mCamWidth, mCamHeight);
     mGrayImage.allocate(mCamWidth, mCamHeight);
-    mThreshold = 100;
+    mThreshold = 20;
     bLearnBackground = true;
     
     mCells.clear();
-    for (int i =0; i <= 4; i++){
+    for (int i =0; i <mCellTotalNum; i++){
         CELL tempCell;
         ofRectangle tempRect;
         tempRect.set(mCellLeftMargin, mPerCellHeight*i , mPerCellWidth,  mPerCellHeight);
@@ -42,7 +42,7 @@ void ofApp::update(){
         }
         mGrayDiff.absDiff(mGrayBg, mGrayImage);
         mGrayDiff.threshold(mThreshold);
-        mContourFinder.findContours(mGrayDiff, 3, mCamWidth*mCamHeight/3, 10, false);
+        mContourFinder.findContours(mGrayDiff, 3, mCamWidth*mCamHeight/3, 20, false);
         intersect();
     }
 }
